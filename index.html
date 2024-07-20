@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Finanzas</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .dark {
+            background-color: #1a202c;
+            color: white;
+        }
+        .dark .bg-gray-100 {
+            background-color: #1a202c;
+        }
+        .dark .text-gray-700 {
+            color: #a0aec0;
+        }
+        .dark .bg-white {
+            background-color: #2d3748;
+        }
+        .dark .border-gray-200 {
+            border-color: #4a5568;
+        }
+        .dark .border-gray-400 {
+            border-color: #718096;
+        }
+        .dark input,
+        .dark select {
+            color: #1a202c; /* Texto en negro para modo oscuro */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 transition duration-500">
+    <div class="container mx-auto p-4">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-2xl font-bold">Gestión de Finanzas</h1>
+            <button id="toggle-dark-mode" class="bg-gray-700 text-white px-3 py-2 rounded">
+                <span id="mode-icon">🌙</span>
+            </button>
+        </div>
+        <form id="finance-form" class="bg-white dark:bg-gray-800 p-4 rounded shadow-md mb-4">
+            <input type="hidden" id="edit-index" value="">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="date" class="block text-gray-700 dark:text-gray-300">Fecha</label>
+                    <input type="date" id="date" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                </div>
+                <div>
+                    <label for="amount" class="block text-gray-700 dark:text-gray-300">Monto (COP)</label>
+                    <input type="text" id="amount" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600" placeholder="0.00">
+                </div>
+            </div>
+            <div class="mb-4">
+                <label for="description" class="block text-gray-700 dark:text-gray-300">Descripción</label>
+                <input type="text" id="description" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600" placeholder="Descripción">
+            </div>
+            <div class="mb-4">
+                <label for="icon" class="block text-gray-700 dark:text-gray-300">Icono</label>
+                <select id="icon" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                    <option value="💵">💵 Dinero</option>
+                    <option value="🍽️">🍽️ Comida</option>
+                    <option value="🚗">🚗 Transporte</option>
+                    <option value="🏠">🏠 Casa</option>
+                    <option value="🎁">🎁 Otros</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label for="category" class="block text-gray-700 dark:text-gray-300">Categoría</label>
+                <select id="category" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                    <option value="Ingreso">Ingreso</option>
+                    <option value="Egreso">Egreso</option>
+                </select>
+            </div>
+            <button type="submit" class="w-full bg-blue-500 text-white px-3 py-2 rounded">Agregar</button>
+        </form>
+
+        <!-- Filtros -->
+        <div class="flex gap-4 mb-4">
+            <div>
+                <label for="filter-date" class="block text-gray-700 dark:text-gray-300">Filtrar por Fecha</label>
+                <input type="date" id="filter-date" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div>
+                <label for="filter-icon" class="block text-gray-700 dark:text-gray-300">Filtrar por Icono</label>
+                <select id="filter-icon" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                    <option value="">Todos</option>
+                    <option value="💵">💵 Dinero</option>
+                    <option value="🍽️">🍽️ Comida</option>
+                    <option value="🚗">🚗 Transporte</option>
+                    <option value="🏠">🏠 Casa</option>
+                    <option value="🎁">🎁 Otros</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Contadores de Gasto del Mes -->
+        <div class="mt-6">
+            <h2 class="text-2xl font-semibold">Totales</h2>
+            <div class="flex justify-between">
+                <p><strong>Ingreso Total:</strong> <span id="total-income">$0.00 COP</span></p>
+                <p><strong>Egreso Total:</strong> <span id="total-expense">$0.00 COP</span></p>
+                <p><strong>Saldo Restante:</strong> <span id="remaining-balance">$0.00 COP</span></p>
+            </div>
+        </div>
+        
+        <div id="finance-list" class="bg-white dark:bg-gray-800 p-4 rounded shadow-md">
+            <h2 class="text-xl font-bold mb-4">Registros</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fecha</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Monto</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Descripción</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Icono</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Categoría</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="finance-entries" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <!-- Los registros aparecerán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('finance-form');
+        const financeList = document.getElementById('finance-entries');
+        const editIndex = document.getElementById('edit-index');
+        const toggleDarkModeButton = document.getElementById('toggle-dark-mode');
+        const modeIcon = document.getElementById('mode-icon');
+        const filterDate = document.getElementById('filter-date');
+        const filterIcon = document.getElementById('filter-icon');
+        const totalExpense = document.getElementById('total-expense');
+        const totalIncome = document.getElementById('total-income');
+        const remainingBalance = document.getElementById('remaining-balance');
+        const amountInput = document.getElementById('amount');
+
+        let isDarkMode = false;
+
+        if (localStorage.getItem('darkMode') === 'true') {
+            isDarkMode = true;
+            document.body.classList.add('dark');
+            modeIcon.textContent = '☀️';
+        }
+
+        toggleDarkModeButton.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark', isDarkMode);
+            localStorage.setItem('darkMode', isDarkMode);
+            modeIcon.textContent = isDarkMode ? '☀️' : '🌙';
+        });
+
+        function formatAmount(value) {
+            const parts = value.toString().split(".");
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            return parts.join(",");
+        }
+
+        amountInput.addEventListener('input', () => {
+            let value = amountInput.value.replace(/\D/g, '');
+            if (value) {
+                value = parseFloat(value) / 100;
+                amountInput.value = formatAmount(value.toFixed(2));
+            }
+        });
+
+        loadFinances();
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const date = document.getElementById('date').value;
+            const amount = parseFloat(amountInput.value.replace(/\D/g, '')) / 100;
+            const description = document.getElementById('description').value;
+            const icon = document.getElementById('icon').value;
+            const category = document.getElementById('category').value;
+
+            if (date && !isNaN(amount) && description) {
+                const finance = { date, amount, description, icon, category };
+                if (editIndex.value === '') {
+                    saveFinance(finance);
+                } else {
+                    updateFinance(editIndex.value, finance);
+                }
+                form.reset();
+                amountInput.value = '';
+                editIndex.value = '';
+                renderFinances();
+            } else {
+                alert('Por favor, completa todos los campos.');
+            }
+        });
+
+        function saveFinance(finance) {
+            const finances = getFinances();
+            finances.push(finance);
+            localStorage.setItem('finances', JSON.stringify(finances));
+        }
+
+        function updateFinance(index, updatedFinance) {
+            const finances = getFinances();
+            finances[index] = updatedFinance;
+            localStorage.setItem('finances', JSON.stringify(finances));
+        }
+
+        function getFinances() {
+            return JSON.parse(localStorage.getItem('finances')) || [];
+        }
+
+        function loadFinances() {
+            renderFinances();
+        }
+
+        function renderFinances() {
+            financeList.innerHTML = '';
+            const finances = getFinances();
+            const filteredFinances = filterFinances(finances);
+            filteredFinances.forEach((finance, index) => {
+                addFinanceToList(finance, index);
+            });
+            updateTotalExpenses(filteredFinances);
+            updateTotalIncomes(filteredFinances);
+            updateRemainingBalance(filteredFinances);
+        }
+
+        function filterFinances(finances) {
+            const selectedDate = filterDate.value;
+            const selectedIcon = filterIcon.value;
+
+            return finances.filter(finance => {
+                const matchesDate = !selectedDate || finance.date === selectedDate;
+                const matchesIcon = !selectedIcon || finance.icon === selectedIcon;
+                return matchesDate && matchesIcon;
+            });
+        }
+
+        function updateTotalExpenses(finances) {
+            const total = finances
+                .filter(finance => finance.category === 'Egreso')
+                .reduce((sum, finance) => sum + parseFloat(finance.amount), 0);
+            totalExpense.textContent = `$${total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')} COP`;
+        }
+
+        function updateTotalIncomes(finances) {
+            const total = finances
+                .filter(finance => finance.category === 'Ingreso')
+                .reduce((sum, finance) => sum + parseFloat(finance.amount), 0);
+            totalIncome.textContent = `$${total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')} COP`;
+        }
+
+        function updateRemainingBalance(finances) {
+            const totalIncomeAmount = finances
+                .filter(finance => finance.category === 'Ingreso')
+                .reduce((sum, finance) => sum + parseFloat(finance.amount), 0);
+
+            const totalExpenseAmount = finances
+                .filter(finance => finance.category === 'Egreso')
+                .reduce((sum, finance) => sum + parseFloat(finance.amount), 0);
+
+            const remaining = totalIncomeAmount - totalExpenseAmount;
+            remainingBalance.textContent = `$${remaining.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')} COP`;
+        }
+
+        function addFinanceToList(finance, index) {
+            const row = document.createElement('tr');
+            row.classList.add('bg-white', 'dark:bg-gray-800');
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">${finance.date}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${formatAmount(finance.amount.toFixed(2))} COP</td>
+                <td class="px-6 py-4 whitespace-nowrap">${finance.description}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${finance.icon}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${finance.category}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button onclick="editFinance(${index})" class="bg-yellow-500 text-white px-2 py-1 rounded mr-2">Editar</button>
+                    <button onclick="deleteFinance(${index})" class="bg-red-500 text-white px-2 py-1 rounded">Borrar</button>
+                </td>
+            `;
+            financeList.appendChild(row);
+        }
+
+        window.editFinance = function(index) {
+            const finances = getFinances();
+            const finance = finances[index];
+            document.getElementById('date').value = finance.date;
+            amountInput.value = formatAmount(finance.amount.toFixed(2));
+            document.getElementById('description').value = finance.description;
+            document.getElementById('icon').value = finance.icon;
+            document.getElementById('category').value = finance.category;
+            editIndex.value = index;
+        }
+
+        window.deleteFinance = function(index) {
+            const finances = getFinances();
+            finances.splice(index, 1);
+            localStorage.setItem('finances', JSON.stringify(finances));
+            renderFinances();
+        }
+
+        filterDate.addEventListener('change', () => renderFinances());
+        filterIcon.addEventListener('change', () => renderFinances());
+    });
+    </script>
+</body>
+</html>
